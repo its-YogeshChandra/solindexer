@@ -5,10 +5,6 @@ mod controller;
 mod routes;
 use controller::fetch_data;
 
-#[post("/")]
-fetch_data
-
-
 #[post("/echo")]
 async fn echo(req_body: String) -> impl Responder {
     HttpResponse::Ok().body(req_body)
@@ -31,10 +27,7 @@ async fn main() -> io::Result<()> {
     //the main server instance
     HttpServer::new(move || {
         //moving main_data into the closure
-        App::new()
-            .app_data(main_data.clone())
-            .service(hello)
-            .service(echo)
+        App::new().app_data(main_data.clone()).service(fetch_data)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

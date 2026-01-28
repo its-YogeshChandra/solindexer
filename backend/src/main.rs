@@ -1,6 +1,7 @@
 //create the web server in this only
 use actix_web::{App, HttpResponse, HttpServer, Responder, get, post, web};
-use std::{io, sync::Mutex};
+use serde::Deserialize;
+use std::io;
 mod controller;
 mod routes;
 use controller::fetch_data;
@@ -10,28 +11,29 @@ async fn echo(req_body: String) -> impl Responder {
     HttpResponse::Ok().body(req_body)
 }
 
+// pub struct AppDataStruct {
+//     data: Mutex<String>,
+// }
+
 //main data struct
+#[derive(Debug, Deserialize)]
 pub struct MainDataStruct {
-    data: Mutex<String>,
+    data: String,
 }
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    println!("web server in the rust ");
-
     //create instance of the main data struct
-    let main_data = web::Data::new(MainDataStruct {
-        data: Mutex::new("data".to_string()),
-    });
+    // let main_data = web::Data::new(AppDataStruct {
+    //     data: Mutex::new("data".to_string()),
+    // });
 
     //the main server instance
     HttpServer::new(move || {
         //moving main_data into the closure
-        App::new().app_data(main_data.clone()).service(fetch_data)
+        App::new().service(fetch_data)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 9000))?
     .run()
     .await
-
-    //have to put the meessage that server is running on port
 }

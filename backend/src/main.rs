@@ -23,7 +23,9 @@ async fn main() -> io::Result<()> {
     println!("server is working");
     HttpServer::new(move || {
         //moving main_data into the closure
-        App::new().service(fetch_data)
+        App::new()
+            .wrap(actix_cors::Cors::permissive())
+            .service(fetch_data)
     })
     .bind(("0.0.0.0", 9000))?
     .run()

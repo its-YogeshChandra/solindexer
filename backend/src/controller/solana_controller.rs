@@ -4,6 +4,16 @@ use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_commitment_config::CommitmentConfig;
 use solana_sdk::{account_info, pubkey::Pubkey};
 use std::str::FromStr;
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub struct AccountResponse {
+    pub address: String,
+    pub lamports: u64,
+    pub owner: String,
+    pub executable: bool,
+    pub rent_epoch: u64,
+}
 
 //fetch data
 #[post("/data")]
@@ -16,14 +26,23 @@ pub async fn fetch_data(data: web::Json<MainDataStruct>) -> impl Responder {
         CommitmentConfig::confirmed(),
     );
 
+    let mut results = Vec::new();
+
     //for loop
     for addr in address_array {
         //read the acount data from these addresses
-        println!("the address is : {}", &addr);
-        let pubkey = Pubkey::from_str(&addr).unwrap();
-        let account_info = client.get_account(&pubkey).await.unwrap();
-        println!("addr is {:?}", account_info);
+        if let Ok(pubkey) = Pubkey::from_str(&addr) {
+             if let Ok(account_info) = client.get_account(&pubkey).await {
+                results.push(AccountResponse {
+                    address: addr.clone(),
+                    lamports: account_info.lamports,
+                    owner: account_info.owner.to_string(),
+                    executable: account_info.executable,
+                    rent_epoch: account_info.rent_epoch,
+                });
+             }
+        }
     }
 
-    HttpResponse::Ok().body("value is acheived")
+    HttpResponse::Ok().json(results)
 }

@@ -3,11 +3,11 @@ use actix_web::{App, HttpResponse, HttpServer, Responder, get, post, web};
 use std::{io, sync::Mutex};
 mod controller;
 mod routes;
+use controller::fetch_data;
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello World")
-}
+#[post("/")]
+fetch_data
+
 
 #[post("/echo")]
 async fn echo(req_body: String) -> impl Responder {
@@ -15,7 +15,7 @@ async fn echo(req_body: String) -> impl Responder {
 }
 
 //main data struct
-struct MainDataStruct {
+pub struct MainDataStruct {
     data: Mutex<String>,
 }
 
@@ -28,10 +28,17 @@ async fn main() -> io::Result<()> {
         data: Mutex::new("data".to_string()),
     });
 
-    HttpServer::new(|| App::new().service(hello).service(echo))
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await
+    //the main server instance
+    HttpServer::new(move || {
+        //moving main_data into the closure
+        App::new()
+            .app_data(main_data.clone())
+            .service(hello)
+            .service(echo)
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 
     //have to put the meessage that server is running on port
 }
